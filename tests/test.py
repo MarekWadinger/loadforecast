@@ -7,7 +7,7 @@ from loadforecast.warm_start import model_from_json, stan_init
 # Load csv file as pandas data frame
 df = pd.read_csv('../../miris_load_15.csv')
 # Rename dataframe columns so they match requirements
-df_new = df[['DateTime', 'Load']].rename(columns={"DateTime": "ds", "Load": "y"})
+df_new = df[['DateTime', 'Load']].rename(columns={'DateTime': 'ds', 'Load': 'y'})
 # Optional: Transformation from type str to datetime
 df_new['ds'] = pd.to_datetime(df_new['ds'])
 # strip last day
