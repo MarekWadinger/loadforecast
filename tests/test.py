@@ -2,10 +2,10 @@ import pandas as pd
 
 from loadforecast.forecaster import LoadProphet
 from loadforecast.surpress_output import suppress_printout
-from loadforecast.warm_start import model_from_json, stan_init
+from loadforecast.warm_start import model_load, stan_init
 
 # Load csv file as pandas data frame
-df = pd.read_csv('../../miris_load_15.csv')
+df = pd.read_csv('miris_load_15.csv')
 # Rename dataframe columns so they match requirements
 df_new = df[['DateTime', 'Load']].rename(columns={'DateTime': 'ds', 'Load': 'y'})
 # Optional: Transformation from type str to datetime
@@ -20,13 +20,13 @@ with suppress_printout():
     # Fit model on data
     m.fit(df_new1)
     # Make future prediction
-    forecast = m.predict()
+    forecast = m.prediction()
 
 # Save model as json
-m.model_to_json('loadForecast_model.json')
+m.model_dump('loadForecast_model.json')
 
 # Load model from json
-m1 = model_from_json('loadForecast_model.json')
+m1 = model_load('loadForecast_model.json')
 
 # make prediction on loaded model
 forecast1 = m1.predict()

@@ -11,6 +11,7 @@ class suppress_printout(object):
     to stderr just before a script exits, and after the context manager has
     exited.
     """
+
     def __init__(self):
         # Open a pair of null files
         self.null_fds = [os.open(os.devnull, os.O_RDWR) for x in range(2)]

@@ -1,0 +1,4 @@
+/.tox/
+/build/
+/42
+/loadforecast.egg-info/
