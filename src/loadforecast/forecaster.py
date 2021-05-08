@@ -7,6 +7,7 @@
 import json
 from prophet.serialize import model_to_json
 from prophet import Prophet
+from loadforecast.warm_start import stan_init
 
 
 class LoadProphet(Prophet):
@@ -14,6 +15,10 @@ class LoadProphet(Prophet):
 
     Parameters
     ----------
+    df: pd.DataFrame containing the history. Must have columns ds (date
+        type) and y, the time series. If self.growth is 'logistic', then
+        df must also have a column cap that specifies the capacity at
+        each ds.
     country:
         Name of the country, like 'UnitedStates' or 'US'
     yearly_seasonality:
@@ -39,6 +44,8 @@ class LoadProphet(Prophet):
 
     def __init__(
         self,
+        df=None,
+        pretrained_model=None,
         country="BE",
         yearly_seasonality="auto",
         weekly_seasonality=28,
@@ -76,6 +83,10 @@ class LoadProphet(Prophet):
             stan_backend=stan_backend,
         )
         super().add_country_holidays(country)
+        if pretrained_model is None:
+            super().fit(df)
+        else:
+            super().fit(df, init=stan_init(pretrained_model))
 
     def prediction(self, prediction_periods=24 * 4, frequency="15min", floor_lim=0):
         """Predict using the prophet model.
