@@ -82,11 +82,12 @@ class LoadProphet(Prophet):
             uncertainty_samples=uncertainty_samples,
             stan_backend=stan_backend,
         )
-        super().add_country_holidays(country)
-        if pretrained_model is None:
-            super().fit(df)
-        else:
+        if country:
+            super().add_country_holidays(country)
+        if df is not None and pretrained_model is not None:
             super().fit(df, init=stan_init(pretrained_model))
+        elif df is not None and pretrained_model is None:
+            super().fit(df)
 
     def prediction(self, prediction_periods=24 * 4, frequency="15min", floor_lim=0):
         """Predict using the prophet model.

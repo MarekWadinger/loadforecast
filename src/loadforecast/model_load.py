@@ -47,14 +47,19 @@ def model_load(model_json):
 
     Parameters
     ----------
-    model_json: Serialized model string
+    model_json: Serialized model path as string or unpacked model as attributes dict
 
     Returns
     -------
     Prophet model.
     """
-    with open(model_json, "r") as fin:
-        attr_dict = json.loads(json.load(fin))
+
+    if type(model_json) is dict:
+        attr_dict = model_json
+    else:
+        with open(model_json, "r") as fin:
+            attr_dict = json.loads(json.load(fin))
+
     model = LoadProphet()  # We will overwrite all attributes set in init anyway
     # Simple types
     for attribute in SIMPLE_ATTRIBUTES:
