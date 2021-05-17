@@ -29,4 +29,4 @@ forecast = m.prediction()
 
 ## License
 
-Prophet is licensed under the [MIT license](LICENSE).
+Loadforecast is licensed under the [MIT license](LICENSE).
