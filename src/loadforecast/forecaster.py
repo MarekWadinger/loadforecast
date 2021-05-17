@@ -7,6 +7,7 @@
 import json
 from prophet.serialize import model_to_json
 from prophet import Prophet
+from loadforecast.warm_start import stan_init
 
 
 class LoadProphet(Prophet):
@@ -14,6 +15,10 @@ class LoadProphet(Prophet):
 
     Parameters
     ----------
+    df: pd.DataFrame containing the history. Must have columns ds (date
+        type) and y, the time series. If self.growth is 'logistic', then
+        df must also have a column cap that specifies the capacity at
+        each ds.
     country:
         Name of the country, like 'UnitedStates' or 'US'
     yearly_seasonality:
@@ -38,14 +43,26 @@ class LoadProphet(Prophet):
     """
 
     def __init__(
-            self,
-            country='BE',
-            yearly_seasonality='auto',
-            weekly_seasonality=28,
-            daily_seasonality=True,
-            seasonality_prior_scale=10,
-            holidays_prior_scale=0.1,
-            changepoint_prior_scale=0.001
+        self,
+        df=None,
+        pretrained_model=None,
+        country="BE",
+        yearly_seasonality="auto",
+        weekly_seasonality=28,
+        daily_seasonality=True,
+        seasonality_prior_scale=10,
+        holidays_prior_scale=0.1,
+        changepoint_prior_scale=0.001,
+        growth="linear",
+        changepoints=None,
+        n_changepoints=25,
+        changepoint_range=0.8,
+        holidays=None,
+        seasonality_mode="additive",
+        mcmc_samples=0,
+        interval_width=0.80,
+        uncertainty_samples=1000,
+        stan_backend=None,
     ):
         super().__init__(
             yearly_seasonality=yearly_seasonality,
@@ -53,11 +70,26 @@ class LoadProphet(Prophet):
             daily_seasonality=daily_seasonality,
             seasonality_prior_scale=seasonality_prior_scale,
             holidays_prior_scale=holidays_prior_scale,
-            changepoint_prior_scale=changepoint_prior_scale
+            changepoint_prior_scale=changepoint_prior_scale,
+            growth=growth,
+            changepoints=changepoints,
+            n_changepoints=n_changepoints,
+            changepoint_range=changepoint_range,
+            holidays=holidays,
+            seasonality_mode=seasonality_mode,
+            mcmc_samples=mcmc_samples,
+            interval_width=interval_width,
+            uncertainty_samples=uncertainty_samples,
+            stan_backend=stan_backend,
         )
-        super().add_country_holidays(country)
+        if country:
+            super().add_country_holidays(country)
+        if df is not None and pretrained_model is not None:
+            super().fit(df, init=stan_init(pretrained_model))
+        elif df is not None and pretrained_model is None:
+            super().fit(df)
 
-    def predict(self, prediction_periods=24 * 4, frequency='15min', floor_lim=0):
+    def prediction(self, prediction_periods=24 * 4, frequency="15min", floor_lim=0):
         """Predict using the prophet model.
 
         Parameters
@@ -74,14 +106,16 @@ class LoadProphet(Prophet):
         A pd.DataFrame with the forecast components.
         """
         # Extend df to the future by specified number of hours
-        future = super().make_future_dataframe(periods=prediction_periods, freq=frequency)
+        future = super().make_future_dataframe(
+            periods=prediction_periods, freq=frequency
+        )
         # Set lower bound on given prediction
-        future['floor'] = floor_lim
+        future["floor"] = floor_lim
         # Make prediction
         forecast = super().predict(future)
         return forecast
 
-    def model_to_json(self, name):
-        with open(name, 'w') as fout:
+    def model_dump(self, name):
+        with open(name, "w") as fout:
             json.dump(model_to_json(self), fout)  # Save model
         return self
